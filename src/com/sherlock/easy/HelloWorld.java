@@ -57,7 +57,7 @@ import java.util.Map;
  */
 public class HelloWorld {
 
-    public static int[] twoSum(int[] nums, int target) {
+    public static int[] Sum(int[] nums, int target) {
         Map<Integer,Integer> map = new HashMap<>();
         int[] targetList = new int[2];
         for(int i = 0; i < nums.length; i++){
@@ -73,7 +73,7 @@ public class HelloWorld {
 
     public static void main(String[] args) {
         int[] nums = {2,7,11,15};
-        System.out.println(Arrays.toString(twoSum(nums,9)));
+        System.out.println(Arrays.toString(Sum(nums,9)));
     }
 
 }
