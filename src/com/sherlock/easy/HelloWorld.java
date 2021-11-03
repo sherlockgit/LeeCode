@@ -1,4 +1,4 @@
-package com.sherlock.simple;
+package com.sherlock.easy;
 
 import java.util.Arrays;
 import java.util.HashMap;
