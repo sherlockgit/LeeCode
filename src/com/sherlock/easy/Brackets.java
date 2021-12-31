@@ -74,25 +74,26 @@ public class Brackets {
             case "]":
                 return "[";
         }
-        return "null";
+        return null;
     }
 
     public static boolean isValid(String s) {
-        Stack stack = new Stack();
         String right = "";
-        for(int i = 0;i<s.length();i++){
-            stack.push(String.valueOf(s.charAt(i)));
-        }
-
-        while (!stack.isEmpty()){
-            String left = (String) stack.pop();
+        for(int i = s.length()-1;i >= 0;i--){
+            String left = String.valueOf(s.charAt(i));
             if (right.equals("")) {
                 right = change(left);
+                if (right == null) {
+                    return false;
+                }
             }else {
                 if (right.equals(left)) {
                     right = "";
                 }else {
                     if (!left.equals(right.substring(0,1))) {
+                        if (change(left) == null) {
+                            return false;
+                        }
                         right =  change(left) + right;
                     }else {
                         right = right.substring(1);
@@ -101,10 +102,18 @@ public class Brackets {
             }
         }
         return right.equals("");
+//        Stack<Character>stack = new Stack<Character>();
+//        for(char c: s.toCharArray()){
+//            if(c=='(')stack.push(')');
+//            else if(c=='[')stack.push(']');
+//            else if(c=='{')stack.push('}');
+//            else if(stack.isEmpty()||c!=stack.pop())return false;
+//        }
+//        return stack.isEmpty();
     }
 
     public static void main(String[] args) {
-        System.out.println(isValid("(([]){})"));
+        System.out.println(isValid("{[}]"));
     }
 
 }
