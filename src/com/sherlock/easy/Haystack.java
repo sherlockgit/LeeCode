@@ -46,6 +46,7 @@
 // 👍 1194 👎 0
 package com.sherlock.easy;
 
+
 /**
  * @Description:
  * @Author: linmuyu
@@ -53,23 +54,42 @@ package com.sherlock.easy;
  */
 public class Haystack {
 
+
     //todo kmp算法
     public static int strStr(String haystack, String needle) {
-        if ("".equals(needle)) {
-            return 0;
-        }
-        int result = 0;
-        for(int i = 0; i < haystack.length() - needle.length()+1;i++){
-            if (haystack.substring(i,needle.length()+i).equals(needle)) {
-                return result;
+
+        /*******************************暴力算法***********************************/
+        if (haystack.length() < needle.length() || "".equals(needle)) return -1;
+
+        char[] n = haystack.toCharArray();
+        char[] j = needle.toCharArray();
+
+        for (int i = 0;i < n.length; i++){
+            for(int z = 0; z < j.length; z++){
+                if (n[i+z] != j[z]) {
+                    break;
+                }
+                if (j.length-1 == z) return i;
             }
-            ++result;
+            if(n.length - i - 1 < j.length) return -1;
         }
         return -1;
+
+
+
+        /*******************************KMP算法***********************************/
     }
 
+//    public static int KMP(String haystack, String needle){
+//
+//    }
+//
+//    public static int search(){
+//
+//    }
+
     public static void main(String[] args) {
-        System.out.println(strStr("hello","ll"));
+        System.out.println(strStr("mississippi","sippia"));
     }
 
 }
