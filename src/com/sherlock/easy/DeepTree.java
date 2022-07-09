@@ -18,9 +18,7 @@
 
 package com.sherlock.easy;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 
 /**
@@ -32,7 +30,22 @@ public class DeepTree {
 
     public static void main(String[] args) {
         TreeNode treeNode = createTreeNode();
-        System.out.println(createTreeNode());
+        Integer max = 0;
+        System.out.println(traverse(treeNode,0,max));
+    }
+
+    static int traverse(TreeNode treeNode,int i,Integer max){
+        if (treeNode == null) {
+            if (max < i) {
+                max = i;
+            }
+            return max;
+        }
+        i++;
+        max = traverse(treeNode.left,i,max);
+        max = traverse(treeNode.right,i,max);
+        i--;
+        return max;
     }
 
     static TreeNode createTreeNode(){
