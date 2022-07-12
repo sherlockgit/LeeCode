@@ -18,6 +18,8 @@
 
 package com.sherlock.easy;
 
+import com.sherlock.utils.TreeNode;
+
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -69,16 +71,5 @@ public class DeepTree {
 }
 
 
-class TreeNode {
-    Integer val;
-    TreeNode left;
-    TreeNode right;
-    TreeNode() {}
-    TreeNode(Integer val) { this.val = val; }
-    TreeNode(Integer val, TreeNode left, TreeNode right) {
-        this.val = val;
-        this.left = left;
-        this.right = right;
-    }
-}
+
 
