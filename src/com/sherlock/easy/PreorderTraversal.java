@@ -55,10 +55,7 @@ package com.sherlock.easy;
 
 import com.sherlock.utils.TreeNode;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 /**
  * @Description:
@@ -72,7 +69,8 @@ public class PreorderTraversal {
     public static void main(String[] args) {
         list = new ArrayList<>();
         TreeNode treeNode = createTreeNode();
-        traverse(treeNode);
+//        traverse(treeNode);
+        iteration(treeNode);
         System.out.println(list);
     }
 
@@ -90,13 +88,33 @@ public class PreorderTraversal {
         traverse(treeNode.right);
     }
 
-    static void iteration(){
-
+    /**
+     * 迭代算法
+     * @param treeNode
+     */
+    static void iteration(TreeNode treeNode){
+        Stack<TreeNode> stack = new Stack<>();
+        while (treeNode != null){
+            if(treeNode.val != null){
+                list.add(treeNode.val);
+            }
+            if (treeNode.left == null) {
+                if (treeNode.right == null) {
+                    treeNode = stack.isEmpty() ? null : stack.pop().right;
+                    continue;
+                }
+                stack.push(treeNode);
+                treeNode = treeNode.right;
+                continue;
+            }
+            stack.push(treeNode);
+            treeNode = treeNode.left;
+        }
     }
 
 
     static TreeNode createTreeNode(){
-        Integer[] list = {1,null,2,3};
+        Integer[] list = {1,null,2,3,4};
         TreeNode treeNode = new TreeNode(list[0]);
         Queue<TreeNode> queue = new LinkedList<>();
         queue.offer(treeNode);
