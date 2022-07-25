@@ -91,6 +91,20 @@ public class PaddingPoint {
         traverse(treeNode.left,treeNode.right);
     }
 
+    static void traverse(TreeNode treeNode){
+        if (treeNode == null) {
+            return;
+        }
+        if (treeNode.left != null) {
+            treeNode.left.next = treeNode.right;
+            if (treeNode.next != null) {
+                treeNode.right.next = treeNode.next.left;
+            }
+        }
+        traverse(treeNode.left);
+        traverse(treeNode.right);
+    }
+
     /**
      * 三叉树方式
      * @param left
