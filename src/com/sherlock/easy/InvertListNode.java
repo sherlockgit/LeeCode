@@ -9,16 +9,23 @@ import com.sherlock.utils.ListNode;
  */
 public class InvertListNode {
     public static void main(String[] args) {
-        ListNode listNode = run(createList());
-        System.out.println(listNode);
+        ListNode node = null;
+        ListNode result = run(createList(),node);
+        System.out.println(node);
     }
 
-    public static ListNode run(ListNode listNode){
+    public static ListNode run(ListNode listNode,ListNode result){
         if (listNode == null) {
-            return listNode;
+            return null;
         }
-        run(listNode.next);
-        return null;
+        ListNode node = run(listNode.next,result);
+        if (node == null) {
+            return listNode;
+        }else {
+            result = new ListNode(listNode.val);
+            result.next = node;
+            return result;
+        }
     }
 
     static ListNode createList(){
