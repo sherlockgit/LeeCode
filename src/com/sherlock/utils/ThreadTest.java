@@ -1,14 +1,5 @@
 package com.sherlock.utils;
-
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.TreeMap;
 import java.util.concurrent.*;
-
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * @Description:
@@ -19,9 +10,13 @@ public class ThreadTest {
     public static final String TYPE_MD5 = "md5";
     public static final String TYPE_SHA1 = "sha1";
 
-    public static void main(String[] args) throws ExecutionException, InterruptedException {
+    public static void main(String[] args) throws Throwable {
 //        callableAndFutureDemo();
-        executorCompletionServiceDemo();
+//        executorCompletionServiceDemo();
+//        interruptDemo();
+//        timeRunTwoDemo();
+        timeRunOneDemo();
+
     }
 
     /**
@@ -40,6 +35,7 @@ public class ThreadTest {
                 return "ok";
             }
         });
+
 //        future.cancel(true); //取消任务
         System.out.println(future.get());
     }
@@ -72,6 +68,99 @@ public class ThreadTest {
 //            System.out.println(completionService.take().get());//会阻塞
             System.out.println(completionService.poll().get());//不会阻塞，线程未完成则抛出异常
         }
+        Thread.currentThread().interrupt();
+    }
+
+    /**
+     * interrupt//线程中断
+     */
+    public static void interruptDemo(){
+        ExecutorService exec = Executors.newSingleThreadExecutor();
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                Thread.currentThread().interrupt();
+                while (true){
+                    try {
+                        System.out.println(Thread.currentThread().isInterrupted());
+                        Thread.sleep(10000);
+                        Thread.interrupted();
+                    } catch (InterruptedException e) {
+                        System.out.println("线程中断");
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * 外部线程安排中断（不要这么做）
+     * @throws Throwable
+     */
+    public static void timeRunOneDemo() throws Throwable {
+        timeRunOne(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("ok");
+            }
+        },10,TimeUnit.SECONDS);
+    }
+
+    public static void timeRunTwoDemo() throws Throwable {
+        timeRunTwo(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("ok");
+            }
+        },10,TimeUnit.SECONDS);
+    }
+
+
+
+    public static void timeRunOne(final Runnable r,long time,TimeUnit timeUnit) throws InterruptedException {
+        final Thread thread = Thread.currentThread();
+        ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
+        exec.schedule(new Runnable() {
+            @Override
+            public void run() {
+                thread.interrupt();
+            }
+        },time,timeUnit);
+        Thread.sleep(15000);
+        r.run();
+    }
+
+    public static void timeRunTwo(final Runnable r,long time,TimeUnit timeUnit) throws Throwable {
+
+        class RethrowableTask implements Runnable{
+            private volatile Throwable t;
+            @Override
+            public void run() {
+                try {
+                    r.run();
+                }catch (Throwable t){
+                    this.t =t ;
+                }
+            }
+            void rethrow() throws Throwable {
+                if (t != null) {
+                    throw t;
+                }
+            }
+        }
+
+        RethrowableTask task = new RethrowableTask();
+        final Thread taskThread = new Thread(task);
+        taskThread.start();
+        ScheduledExecutorService cancelExec = Executors.newScheduledThreadPool(1);
+        cancelExec.schedule(new Runnable() {
+            @Override
+            public void run() {
+                taskThread.interrupt();
+            }
+        },time,timeUnit);
+        taskThread.join(timeUnit.toMillis(time));
+        task.rethrow();
     }
 
 
