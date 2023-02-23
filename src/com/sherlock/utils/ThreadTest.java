@@ -1,5 +1,9 @@
 package com.sherlock.utils;
 import java.io.*;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
+import java.math.BigInteger;
 import java.net.Socket;
 import java.util.concurrent.*;
 
@@ -418,6 +422,52 @@ public class ThreadTest {
         exec.shutdown();
     }
 
+    /**
+     * 饥饿死锁
+     * 线程池队中的任务相互依赖，导致资源不足，会出现饥饿死锁
+     */
+    public static void ThreadDeadLock() {
+
+        class Demo {
+            ExecutorService exec = Executors.newSingleThreadExecutor();
+
+            class Demo1 implements Callable<String>{
+
+                @Override
+                public String call() throws Exception {
+                    System.out.println("step1");
+                    Future<String> t1,t2;
+                    t1 = exec.submit(new Callable<String>() {
+                        @Override
+                        public String call() throws Exception {
+                            System.out.println("step2");
+                            Thread.sleep(2000);
+                            return "ok";
+                        }
+                    });
+                    t2 = exec.submit(new Callable<String>() {
+                        @Override
+                        public String call() throws Exception {
+                            System.out.println("step3");
+                            Thread.sleep(3000);
+                            return "ok";
+                        }
+                    });
+                    return t1.get()+t2.get();
+                }
+            }
+        }
+        Demo demo = new Demo();
+        demo.exec.submit(demo.new Demo1());
+    }
+
+    /**
+     * 虚拟机可用的cpu核心数
+     */
+    public static void availableProcessors(){
+        System.out.println(Runtime.getRuntime().availableProcessors());
+    }
+
     public static void main(String[] args) throws Throwable {
 //        callableAndFutureDemo();//callableAndFuture
 //        executorCompletionServiceDemo();//executorCompletionService-一个可获取结果的献唱队列
@@ -429,13 +479,59 @@ public class ThreadTest {
 //        ReaderThreadDemo();//通过改写interrupt方法将非标准的取消操作封装在Thread中
 //        poisonPill();//毒丸对象
 //        runTime();//runTime
-        threadLocal();//threadLocal
+//        threadLocal();//threadLocal
+//        ThreadDeadLock();//饥饿死锁
+//        availableProcessors();//虚拟机可用的cpu核心数
+//        threadNum();//线程池数量设计——cpu核心数*cpu使用率*(1+任务等待时间/任务计算时间)
         test();
+    }
+
+
+    /**
+     * 线程池数量设计——cpu核心数*cpu使用率*(1+任务等待时间/任务计算时间)
+     */
+    public static void threadNum(){
+        ThreadMXBean tmbean = ManagementFactory.getThreadMXBean();
+        tmbean.setThreadContentionMonitoringEnabled(true);
+        tmbean.setThreadCpuTimeEnabled(true);
+        ExecutorService exec = Executors.newCachedThreadPool();
+        for (int i = 0; i < 20 ; i++){
+            exec.execute(new Runnable() {
+                @Override
+                public void run() {
+                    BigInteger bigInteger = new BigInteger("1");
+                    for (int i = 0; i <= 100 ;i++){
+                        bigInteger = bigInteger.nextProbablePrime();
+                    }
+                    System.out.println("ok");
+                }
+            });
+        }
+        try {
+            Thread.currentThread().join(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        long[] allThread = tmbean.getAllThreadIds();
+        System.out.println(Thread.currentThread().getName());
+        if (allThread.length > 0) {
+            for (long threadId : allThread) {
+                ThreadInfo info = tmbean.getThreadInfo(threadId);
+                System.out.println("线程id:" + info.getThreadId() +
+                        " ;线程名称:" + info.getThreadName() +
+                        " ;线程状态:" + info.getThreadState() +
+                        " ;cpu计算时间:" + tmbean.getThreadCpuTime(threadId) + //cpu时间
+                        " ;等待时间:" + (info.getWaitedTime() //线程状态为WAITING or TIMED_WAITING的时间
+                        + info.getBlockedTime())); //线程状态为BLOCKED时间
+            }
+        }
+        exec.shutdown();
     }
 
     public static void test() throws InterruptedException {
 
     }
+
 
 }
 
