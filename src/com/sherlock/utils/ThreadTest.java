@@ -1,8 +1,5 @@
 package com.sherlock.utils;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.Socket;
 import java.util.concurrent.*;
 
@@ -15,18 +12,6 @@ import java.util.concurrent.*;
 public class ThreadTest {
     public static final String TYPE_MD5 = "md5";
     public static final String TYPE_SHA1 = "sha1";
-
-    public static void main(String[] args) throws Throwable {
-//        callableAndFutureDemo();//callableAndFuture
-//        executorCompletionServiceDemo();//executorCompletionService-一个可获取结果的献唱队列
-//        interruptDemo();//中断
-//        timeRunOneDemo();//中断——不可捕获任务执行过程中的异常
-//        timeRunTwoDemo();//中断——可捕获任务执行过程中的异常，但有join限制
-//        timeRunThreeDemo();//中断--可捕获任务执行过程中的异常
-//        getNextTaskDemo();
-        ReaderThreadDemo();//通过改写interrupt方法将非标准的取消操作封装在Thread中
-
-    }
 
     /**
      * callable
@@ -304,10 +289,153 @@ public class ThreadTest {
 
     }
 
-//    public void test(){
-//        FutureTask
-//        RunnableFuture
-//    }
+    /**
+     * 毒丸对象
+     */
+    public static void poisonPill() throws InterruptedException {
+
+
+        class Posion {
+
+            private final BlockingQueue<String> queue = new ArrayBlockingQueue<>(10);
+            private final String poison = "poison";
+            private final Consumer consumer = new Consumer();
+            private final Producer producer = new Producer();
+
+
+            public void cancel(){
+                producer.interrupt();
+            }
+
+            public void start(){
+                consumer.start();
+                producer.start();
+            }
+
+            class Producer extends Thread{
+                @Override
+                public void run() {
+                    int i = 1;
+                    while (true) {
+                        try {
+                            Thread.sleep(1000);
+                            queue.put(String.valueOf(i++));
+                        } catch (InterruptedException e) {
+                            System.out.println("Interrupt中断");
+                            try {
+                                queue.put(poison);//放入毒丸对象，消费者收到毒丸时退出线程
+                                break;
+                            } catch (InterruptedException er) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+
+                }
+            }
+
+            /**
+             * 消费者
+             */
+            class Consumer extends Thread{
+                @Override
+                public void run() {
+                    while (true){
+                        try {
+                            String value = queue.take();
+                            System.out.println(value);
+                            if (value.equals(poison)) {
+                                break;
+                            }
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+
+        }
+
+        Posion posion = new Posion();
+        posion.start();
+        Thread.sleep(10000);
+        posion.cancel();
+
+    }
+
+    /**
+     * Runtime
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public static void runTime() throws IOException, InterruptedException {
+        Process p = Runtime.getRuntime().exec("java -version");
+        boolean res = p.waitFor(10, TimeUnit.SECONDS);
+        if(!res) {
+            System.out.println("Time out");
+        }
+        InputStream inputStream = p.getInputStream();
+        byte[] data = new byte[1024];
+        String result = "";
+        while(inputStream.read(data) != -1) {
+            result += new String(data,"GBK");
+        }
+        if (result == "") {
+            InputStream errorStream = p.getErrorStream();
+            while(errorStream.read(data) != -1) {
+                result += new String(data,"GBK");
+            }
+        }
+    }
+
+
+    /*==================================线程池的使用=======================================*/
+
+    /**
+     * threadLocal
+     * @throws InterruptedException
+     */
+    public static void threadLocal() throws InterruptedException {
+        ThreadLocal<String> threadLocal = new ThreadLocal<>();
+        ExecutorService exec = Executors.newSingleThreadExecutor();
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(threadLocal.get());
+                threadLocal.set("OK");
+                System.out.println(threadLocal.get());
+            }
+        });
+        Thread.sleep(1000);
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println(threadLocal.get());//继承了上次任务的ThreadLocal副本
+                threadLocal.remove();//使threadLocal的什么周期受限于任务的生命周期而不是线程的生命周期
+                System.out.println(threadLocal.get());
+            }
+        });
+        exec.shutdown();
+    }
+
+    public static void main(String[] args) throws Throwable {
+//        callableAndFutureDemo();//callableAndFuture
+//        executorCompletionServiceDemo();//executorCompletionService-一个可获取结果的献唱队列
+//        interruptDemo();//中断
+//        timeRunOneDemo();//中断——不可捕获任务执行过程中的异常
+//        timeRunTwoDemo();//中断——可捕获任务执行过程中的异常，但有join限制
+//        timeRunThreeDemo();//中断--可捕获任务执行过程中的异常
+//        getNextTaskDemo();
+//        ReaderThreadDemo();//通过改写interrupt方法将非标准的取消操作封装在Thread中
+//        poisonPill();//毒丸对象
+//        runTime();//runTime
+        threadLocal();//threadLocal
+        test();
+    }
+
+    public static void test() throws InterruptedException {
+
+    }
 
 }
 
