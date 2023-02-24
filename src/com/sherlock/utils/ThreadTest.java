@@ -528,6 +528,12 @@ public class ThreadTest {
         exec.shutdown();
     }
 
+    private static void threadPoolExecutor(){
+        ExecutorService singleExecutor = Executors.newSingleThreadExecutor();
+        Thread.UncaughtExceptionHandler;
+
+    }
+
     public static void test() throws InterruptedException {
 
     }
